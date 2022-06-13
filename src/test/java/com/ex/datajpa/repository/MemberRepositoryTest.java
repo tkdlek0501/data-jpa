@@ -1,6 +1,8 @@
 package com.ex.datajpa.repository;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -116,5 +118,37 @@ class MemberRepositoryTest {
 		for (MemberDto s : result) {
 			System.out.println("s = " + s);
 		}
+	}
+	
+	@Test
+	public void findByNames() {
+		Member m1 = new Member("AAA", 10, null);
+		Member m2 = new Member("BBB", 20, null);
+		memberRepository.save(m1);
+		memberRepository.save(m2);
+		
+		ArrayList<String> datas = new ArrayList<>();
+		datas.add("AAA");
+		datas.add("BBB");
+		
+		List<Member> result = memberRepository.findByNames(datas);
+		for (Member member : result) {
+			System.out.println("s = " + member);
+		}
+	}
+	
+	@Test
+	public void returnType() {
+		Member m1 = new Member("AAA", 10, null);
+		Member m2 = new Member("BBB", 20, null);
+		memberRepository.save(m1);
+		memberRepository.save(m2);
+		
+		List<Member> aaa = memberRepository.findListByUsername("AAA");
+		//Member bbb = memberRepository.findMemberByUsername("AAA");
+		//Optional<Member> ccc = memberRepository.findOptionalByUsername("AAA");
+		// optional 반환시 null 이면 orElse() 로 처리해주면 된다
+		// optional 에도 여러개 담기면 exception 발생
+		System.out.println("List aaa : " + aaa);
 	}
 }
