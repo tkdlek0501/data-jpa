@@ -8,6 +8,10 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -150,5 +154,51 @@ class MemberRepositoryTest {
 		// optional 반환시 null 이면 orElse() 로 처리해주면 된다
 		// optional 에도 여러개 담기면 exception 발생
 		System.out.println("List aaa : " + aaa);
+	}
+	
+	@Test
+	public void paging(){
+		//given
+		memberRepository.save(new Member("member1", 10, null));
+		memberRepository.save(new Member("member2", 10, null));
+		memberRepository.save(new Member("member3", 10, null));
+		memberRepository.save(new Member("member4", 10, null));
+		memberRepository.save(new Member("member5", 10, null));
+		
+		int age = 10;
+		PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
+		// 사용자 이름으로 desc 정렬
+		
+		//when
+		Page<Member> page = memberRepository.findByAge(age, pageRequest);
+		
+		// Entity -> DTO for API response
+		Page<MemberDto> toMap = page.map(m -> new MemberDto(m.getId(), m.getUsername(), null));
+		
+		//Slice<Member> slice = memberRepository.findByAge(age, pageRequest);
+		
+		// then
+		List<Member> content = page.getContent();
+		long totalElements = page.getTotalElements(); // totalCount
+		
+		//List<Member> content2 = slice.getContent();
+		
+		for (Member member : content) {
+			System.out.println("member = " + member);
+		}
+		System.out.println("totalElement : " + totalElements);
+		
+		Assertions.assertThat(content.size()).isEqualTo(3); // 가져온 content
+		Assertions.assertThat(page.getTotalElements()).isEqualTo(5); // 총 개수
+		Assertions.assertThat(page.getNumber()).isEqualTo(0); // 페이지 번호; 0 부터 시작
+		Assertions.assertThat(page.getTotalPages()).isEqualTo(2); // 총 페이지 개수
+		Assertions.assertThat(page.isFirst()).isTrue(); // 첫번째 페이지인지
+		Assertions.assertThat(page.hasNext()).isTrue(); // 다음 페이지가 있는지
+		
+//		Assertions.assertThat(content2.size()).isEqualTo(3); 
+//		Assertions.assertThat(slice.getNumber()).isEqualTo(0); 
+//		Assertions.assertThat(slice.isFirst()).isTrue(); 
+//		Assertions.assertThat(slice.hasNext()).isTrue(); 
+		
 	}
 }
