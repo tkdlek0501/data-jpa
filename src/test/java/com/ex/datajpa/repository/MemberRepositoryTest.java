@@ -2,7 +2,9 @@ package com.ex.datajpa.repository;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -10,8 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +28,8 @@ class MemberRepositoryTest {
 	
 	@Autowired MemberRepository memberRepository;
 	@Autowired TeamRepository teamRepository;
+	@PersistenceContext
+	EntityManager em;
 	
 	@Test
 	public void testMember() {
@@ -200,5 +204,28 @@ class MemberRepositoryTest {
 //		Assertions.assertThat(slice.isFirst()).isTrue(); 
 //		Assertions.assertThat(slice.hasNext()).isTrue(); 
 		
+	}
+	
+	// bulk성 연산은 영속성 컨텍스트에서 관리하는 것을 무시하고 쿼리를 바로 날려버리는 것
+	@Test
+	public void bulkUpdate() {
+		memberRepository.save(new Member("member1", 10, null));
+		memberRepository.save(new Member("member2", 19, null));
+		memberRepository.save(new Member("member3", 20, null));
+		memberRepository.save(new Member("member4", 21, null));
+		memberRepository.save(new Member("member5", 40, null));
+		
+		int resultCount = memberRepository.bulkAgePlus(20);
+		
+//		em.flush(); // transaction해서 DB에 반영
+//		em.clear(); // 영속성 컨텍스트 날림 (이 다음 부터는 캐시를 이용하지 않고 DB에서 직접 조회되게)
+		
+		Member member5 = memberRepository.findMemberByUsername("member5");
+		System.out.println("member5 : " + member5); 
+		// update를 해도 영속성 컨텍스트에 반영이 되지 않아 나이가 40살로 유지되어 있음
+		// 벌크 연산 후에는 위에 처럼 직접 em.flush(), em.clear() 해줘야함
+		// repository에서 @Modifying(clearAutomatically = true) // true 해주면  위처럼 설정됨
+		
+		Assertions.assertThat(resultCount).isEqualTo(3);
 	}
 }
