@@ -228,4 +228,32 @@ class MemberRepositoryTest {
 		
 		Assertions.assertThat(resultCount).isEqualTo(3);
 	}
+	
+	@Test
+	public void findMemberLazy() {
+		Team teamA = new Team("teamA");
+		Team teamB = new Team("teamB");
+		teamRepository.save(teamA);
+		teamRepository.save(teamB);
+		Member member1 = new Member("member1", 10, teamA);
+		Member member2 = new Member("member2", 10, teamB);
+		memberRepository.save(member1);
+		memberRepository.save(member2);
+		
+		em.flush();
+		em.clear();
+		
+		List<Member> members = memberRepository.findAll();
+		//List<Member> members = memberRepository.findMemberFetchJoin();
+		
+		for (Member member : members) {
+			System.out.println("member = " + member.getUsername());
+			System.out.println("member.teamClass = " + member.getTeam().getClass()); // 이건 프록시 객체로 돼있고
+			System.out.println("member.team = " + member.getTeam().getName()); // Team은 Lazy로 돼있어서 이 때 쿼리가 나가서 프록시 객체를 초기화
+			// 이 부분이 N+1 문제가 생기는 것
+			// 부가정보를 갖고 와야 할 때 이런 문제가 생길 수 있음 -> fetch join을 써서 한번에 join해서 갖고오는 것으로 해결 해야 함
+			// 1. findmemberFetchJoin(); @Query 에 fetch join 사용해서 한번에 끌고오게 함
+			// 2. @EntityGraph를 활용; 기존 findAll() 을 오버라이드 해서 재정의
+		}
+	}
 }

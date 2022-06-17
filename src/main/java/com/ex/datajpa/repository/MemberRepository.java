@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -20,7 +21,8 @@ public interface MemberRepository extends JpaRepository<Member,Long>{
 	
 	List<Member> findTop3By();
 	
-	// TODO: *@Query 이용; 쿼리를 직접 정의하는 기능 @Param 으로 파라미터 넘길 수 있음
+	// TODO: *@Query 이용; 쿼리를 직접 정의하는 기능 @Param 으로 파라미터 넘길 수 있음 
+	// 비교적 간단하면(파라미터 2개 이하) 메소드 쿼리를 쓰고 길어지면 jpql을 쓰자
 	@Query("select m from Member m where m.username = :username and m.age = :age")
 	List<Member> findUser(@Param("username") String username, @Param("age") int age);
 
@@ -54,4 +56,28 @@ public interface MemberRepository extends JpaRepository<Member,Long>{
 	@Modifying(clearAutomatically = true) // update를 실행 + em.flush(), em.clear() 실행 설정
 	@Query("update Member m set m.age = m.age + 1 where m.age >= :age")
 	int bulkAgePlus(@Param("age") int age);
+	
+	@Query("select m from Member m left join fetch m.team")
+	List<Member> findMemberFetchJoin();
+	
+	// TODO: @EntityGraph 사용; fetch join을 적용 
+	// 기본 메소드 쿼리를 override해서  적용할 수 있다
+	@Override
+	@EntityGraph(attributePaths = {"team"})
+	List<Member> findAll();
+	// @Query를 사용하면서도 적용할 수 있다
+	@Query("select m from Member m")
+	@EntityGraph(attributePaths = {"team"})
+	List<Member> findMemberEntityGraph();
+	// 직접 만든 메소드 쿼리에 적용도 가능하다 ('EntityGraph' 부분 다른 이름으로 만들어도 무관하다, 'JoinTeam' 이런식으로?)
+	@EntityGraph(attributePaths = {"team"})
+	List<Member> findEntityGraphByUsername(@Param("username") String username);
+	
+	// Entity에서 클래스 레벨에 @NamedEntityGraph(name = "Member.all", attributeNodes = @NamedAttributeNode("team")) 으로도 가능
+	// repository 에 @EntityGraph("Member.all") 추가하면 적용됨 ; 여기서도 물론 name 은 임의로 설정 가능 
+	
+	// 간단하게 join 하고 싶다면 EntityGraph를 사용하면 되지만 fetch join이 많이 필요하다하면 jpql로 쓰자
+	
+	// + 결국은 N+1을 해결하기 위한 방법으로 한번에 join하기 위한 방법들인데,
+	// 1:N 컬렉션 조회의 경우에는 fetch join이 아닌 Lazy + fetch size 설정으로 해결해야 한다는 것을 주의하자
 }
