@@ -256,4 +256,31 @@ class MemberRepositoryTest {
 			// 2. @EntityGraph를 활용; 기존 findAll() 을 오버라이드 해서 재정의
 		}
 	}
+	
+	@Test
+	public void queryHint() {
+		// given
+		Member member1 = new Member("member1", 10, null);
+		memberRepository.save(member1);
+		em.flush();
+		em.clear();
+		
+		// when
+		Member findMember = memberRepository.findReadOnlyByUsername("member1");
+		findMember.setUsername("member2"); // 변경감지 못함
+		
+		em.flush();
+	}
+	
+	@Test
+	public void lock() {
+		// given
+		Member member1 = new Member("member1", 10, null);
+		memberRepository.save(member1);
+		em.flush();
+		em.clear();
+		
+		// when
+		List<Member> findMembers = memberRepository.findLockByUsername("member1");
+	}
 }

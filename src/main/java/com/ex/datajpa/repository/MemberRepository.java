@@ -3,12 +3,17 @@ package com.ex.datajpa.repository;
 import java.util.List;
 import java.util.Optional;
 
+import javax.persistence.LockModeType;
+import javax.persistence.QueryHint;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.repository.query.Param;
 
 import com.ex.datajpa.dto.MemberDto;
@@ -80,4 +85,18 @@ public interface MemberRepository extends JpaRepository<Member,Long>{
 	
 	// + 결국은 N+1을 해결하기 위한 방법으로 한번에 join하기 위한 방법들인데,
 	// 1:N 컬렉션 조회의 경우에는 fetch join이 아닌 Lazy + fetch size 설정으로 해결해야 한다는 것을 주의하자
+	
+	// 하이버네이트를 이용해서 성능 최적화 (스냅샷을 만들지 않아 변경감지를 막음, readonly 하는 것)
+	// 실제 최적화에 쓰려면 테스트를 해봐야 한다
+	@QueryHints(value = @QueryHint(name = "org.hibernate.readOnly", value = "true"))
+	Member findReadOnlyByUsername(String username);
+	
+	// db의 select for update 기능 
+	// 데이터 수정하려고 SELECT 하는 중이라는 것을 알려 다른 곳에서 select 하는 것을 방지( 동시성 제어)
+	//  특정 데이터(ROW)에 대해 베타적 LOCK을 거는 기능
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	List<Member> findLockByUsername(String username);
+	
+	
+	
 }
