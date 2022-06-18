@@ -20,7 +20,7 @@ import com.ex.datajpa.dto.MemberDto;
 import com.ex.datajpa.entity.Member;
 
 // spring data jpa 인터페이스가 기본적인 CRUD는 제공(구현체까지)
-public interface MemberRepository extends JpaRepository<Member,Long>{
+public interface MemberRepository extends JpaRepository<Member,Long>, MemberRepositoryCustom{
 	
 	List<Member> findByUsernameAndAgeGreaterThan(String username, int age);
 	
@@ -85,6 +85,9 @@ public interface MemberRepository extends JpaRepository<Member,Long>{
 	
 	// + 결국은 N+1을 해결하기 위한 방법으로 한번에 join하기 위한 방법들인데,
 	// 1:N 컬렉션 조회의 경우에는 fetch join이 아닌 Lazy + fetch size 설정으로 해결해야 한다는 것을 주의하자
+	
+	
+	
 	
 	// 하이버네이트를 이용해서 성능 최적화 (스냅샷을 만들지 않아 변경감지를 막음, readonly 하는 것)
 	// 실제 최적화에 쓰려면 테스트를 해봐야 한다
