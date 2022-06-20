@@ -288,4 +288,20 @@ class MemberRepositoryTest {
 	public void callCustom() {
 		List<Member> result = memberRepository.findMemberCustom();
 	}
+	
+	@Test
+	public void testest() {
+		// given
+		Team teamA = new Team("teamA");
+		teamRepository.save(teamA);
+		
+		Member member1 = new Member("member1", 10, teamA);
+		memberRepository.save(member1);
+		
+		em.flush();
+		em.clear();
+		
+		List<Member> findMembers = memberRepository.findListByUsername("member1");
+		System.out.println("member조회 후 team 꺼내오기/ team : " + findMembers.get(0).getTeam()); // 이 시점에 team 조회 쿼리 나감 
+	}
 }
