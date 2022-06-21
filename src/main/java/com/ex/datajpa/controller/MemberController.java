@@ -47,7 +47,7 @@ public class MemberController {
 	// sort는 여러개 넣을 수 있음
 	// .yml 에서 default 값 설정할 수 있음 or @PageableDefault 로 설정
 	
-	@PostConstruct
+//	@PostConstruct
 	public void init() {
 		for(int i = 0; i < 100; i++) {
 			memberRepository.save(new Member("user" + i, i, null));
