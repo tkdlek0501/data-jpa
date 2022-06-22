@@ -10,6 +10,8 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -304,4 +306,38 @@ class MemberRepositoryTest {
 		List<Member> findMembers = memberRepository.findListByUsername("member1");
 		System.out.println("member조회 후 team 꺼내오기/ team : " + findMembers.get(0).getTeam()); // 이 시점에 team 조회 쿼리 나감 
 	}
+	
+	@Test
+	public void queryByExample() {
+		// given
+		Team teamA = new Team("teamA");
+		em.persist(teamA);
+		
+		Member m1 = new Member("m1", 0, teamA);
+		Member m2 = new Member("m2", 0, teamA);
+		em.persist(m1);
+		em.persist(m2);
+		
+		em.flush();
+		em.clear();
+		
+		// when
+		// Probe
+		Member member = new Member("m1", 10, null); // member 자체가 조건이 됨
+		Team team = new Team("teamA");
+		member.setTeam(team);
+		// inner join 까지는 가능
+		
+		ExampleMatcher matcher = ExampleMatcher.matching()
+			.withIgnorePaths("age"); // age는 int 형이라서 0으로 들어가는데, 이를 제외시키기 위해 
+		
+		Example<Member> example = Example.of(member, matcher);
+		
+		List<Member> result = memberRepository.findAll(example);
+		
+		Assertions.assertThat(result.get(0).getUsername()).isEqualTo("m1");
+	}
+	// 동적 쿼리를 편리하게 처리 할 수 있고 도메인 객체를 그대로 사용할 수 있다.
+	// inner join은 가능하지만, outer join이 안됨
+	// quertDsl 을 사용하는 것이 더 좋다. 
 }
