@@ -340,4 +340,25 @@ class MemberRepositoryTest {
 	// 동적 쿼리를 편리하게 처리 할 수 있고 도메인 객체를 그대로 사용할 수 있다.
 	// inner join은 가능하지만, outer join이 안됨
 	// quertDsl 을 사용하는 것이 더 좋다. 
+	
+	@Test
+	public void projections() {
+		Team teamA = new Team("teamA");
+		em.persist(teamA);
+		
+		Member m1 = new Member("m1", 0, teamA);
+		Member m2 = new Member("m2", 0, teamA);
+		em.persist(m1);
+		em.persist(m2);
+		
+		em.flush();
+		em.clear();
+		
+		// username만 필요할 때 projections 를 이용하면 된다
+		List<UsernameOnlyDto> result = memberRepository.findProjectionsByUsername("m1");
+		
+		for(UsernameOnlyDto usernameOnly : result) {
+			System.out.println("usernameOnly = " + usernameOnly);
+		}
+	}
 }
