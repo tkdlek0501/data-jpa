@@ -162,6 +162,7 @@ class MemberRepositoryTest {
 		System.out.println("List aaa : " + aaa);
 	}
 	
+	// TODO: pageable 설정을 위한 PageRequest 쓰는 방법
 	@Test
 	public void paging(){
 		//given
@@ -361,4 +362,27 @@ class MemberRepositoryTest {
 			System.out.println("usernameOnly = " + usernameOnly);
 		}
 	}
+	
+	@Test
+	public void nativeQuery() {
+		Team teamA = new Team("teamA");
+		em.persist(teamA);
+		
+		Member m1 = new Member("m1", 0, teamA);
+		Member m2 = new Member("m2", 0, teamA);
+		em.persist(m1);
+		em.persist(m2);
+		
+		em.flush();
+		em.clear();
+		
+		Page<MemberProjection> result = memberRepository.findByNativeProjection(PageRequest.of(0, 10));
+		List<MemberProjection> content = result.getContent();
+		for (MemberProjection memberProjection : content) {
+			System.out.println("memberProjection = " + memberProjection.getUsername());
+			System.out.println("memberProjection = " + memberProjection.getTeamName());
+		}
+	}
+	
+	
 }
